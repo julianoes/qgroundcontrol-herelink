@@ -7,29 +7,26 @@
  *
  ****************************************************************************/
 
-import QtQuick                  2.3
-import QtQuick.Controls         1.2
+import QtQuick          2.12
+import QtQuick.Controls 2.4
+import QtQuick.Layouts  1.12
 
 import QGroundControl               1.0
 import QGroundControl.ScreenTools   1.0
 import QGroundControl.Controls      1.0
 import QGroundControl.Palette       1.0
 
-/// Guided actions confirmation dialog
 Rectangle {
-    id:             _root
-    width:          confirmColumn.width  + (_margins * 4)
-    height:         confirmColumn.height + (_margins * 4)
-    radius:         ScreenTools.defaultFontPixelHeight / 2
-    color:          qgcPal.window
-    border.color:   _emergencyAction ? "red" : qgcPal.windowShade
-    border.width:   _emergencyAction ? 4 : 1
-    z:              guidedController.z
-    visible:        false
+    id:         _root
+    width:      ScreenTools.defaultFontPixelWidth * 45
+    height:     mainLayout.height + (_margins * 2)
+    radius:     ScreenTools.defaultFontPixelWidth / 2
+    color:      qgcPal.window
+    visible:    false
 
     property var    guidedController
-    property var    altitudeSlider
-    property alias  title:              titleText.text
+    property var    guidedValueSlider
+    property string title                                       // Currently unused
     property alias  message:            messageText.text
     property int    action
     property var    actionData
@@ -38,8 +35,16 @@ Rectangle {
     property alias  optionText:         optionCheckBox.text
     property alias  optionChecked:      optionCheckBox.checked
 
-    property real _margins:         ScreenTools.defaultFontPixelWidth
+    property real _margins:         ScreenTools.defaultFontPixelWidth / 2
     property bool _emergencyAction: action === guidedController.actionEmergencyStop
+
+    Component.onCompleted: guidedController.confirmDialog = this
+
+    onVisibleChanged: {
+        if (visible) {
+            slider.focus = true
+        }
+    }
 
     onHideTriggerChanged: {
         if (hideTrigger) {
@@ -51,14 +56,14 @@ Rectangle {
         if (immediate) {
             visible = true
         } else {
-            // We delay showing the confirmation for a small amount in order to any other state
+            // We delay showing the confirmation for a small amount in order for any other state
             // changes to propogate through the system. This way only the final state shows up.
             visibleTimer.restart()
         }
     }
 
     function confirmCancelled() {
-        altitudeSlider.visible = false
+        guidedValueSlider.visible = false
         visible = false
         hideTrigger = false
         visibleTimer.stop()
@@ -77,76 +82,73 @@ Rectangle {
 
     QGCPalette { id: qgcPal }
 
-    DeadMouseArea {
-        anchors.fill: parent
-    }
-
-    Column {
-        id:                 confirmColumn
+    ColumnLayout {
+        id:                 mainLayout
         anchors.margins:    _margins
-        anchors.centerIn:   parent
+        anchors.left:       parent.left
+        anchors.right:      parent.right
         spacing:            _margins
 
         QGCLabel {
-            id:                     titleText
-            anchors.left:           slider.left
-            anchors.right:          slider.right
-            horizontalAlignment:    Text.AlignHCenter
-            font.pointSize:         ScreenTools.largeFontPointSize
-        }
-
-        QGCLabel {
             id:                     messageText
-            anchors.left:           slider.left
-            anchors.right:          slider.right
+            Layout.fillWidth:       true
             horizontalAlignment:    Text.AlignHCenter
             wrapMode:               Text.WordWrap
+            font.pointSize:         ScreenTools.mediumFontPointSize
         }
 
         QGCCheckBox {
-            id:                         optionCheckBox
-            anchors.horizontalCenter:   parent.horizontalCenter
-            text:                       ""
-            visible:                    text !== ""
+            id:                 optionCheckBox
+            Layout.alignment:   Qt.AlignHCenter
+            text:               ""
+            visible:            text !== ""
         }
 
-        // Action confirmation control
-        SliderSwitch {
-            id:             slider
-            confirmText:    qsTr("Slide to confirm")
-            width:          Math.max(implicitWidth, ScreenTools.defaultFontPixelWidth * 30)
+        RowLayout {
+            Layout.fillWidth:   true
+            spacing:            ScreenTools.defaultFontPixelWidth
 
-            onAccept: {
-                _root.visible = false
-                var altitudeChange = 0
-                if (altitudeSlider.visible) {
-                    altitudeChange = altitudeSlider.getAltitudeChangeValue()
-                    altitudeSlider.visible = false
+            SliderSwitch {
+                id:                 slider
+                confirmText:        ScreenTools.isMobile ? qsTr("Slide to confirm") : qsTr("Slide or hold spacebar")
+                Layout.fillWidth:   true
+
+                onAccept: {
+                    _root.visible = false
+                    var sliderOutputValue = 0
+                    if (guidedValueSlider.visible) {
+                        sliderOutputValue = guidedValueSlider.getOutputValue()
+                        guidedValueSlider.visible = false
+                    }
+                    hideTrigger = false
+                    guidedController.executeAction(_root.action, _root.actionData, sliderOutputValue, _root.optionChecked)
+                    if (mapIndicator) {
+                        mapIndicator.actionConfirmed()
+                        mapIndicator = undefined
+                    }
                 }
-                hideTrigger = false
-                guidedController.executeAction(_root.action, _root.actionData, altitudeChange, _root.optionChecked)
-                if (mapIndicator) {
-                    mapIndicator.actionConfirmed()
-                    mapIndicator = undefined
+            }
+
+            Rectangle {
+                height: slider.height * 0.75
+                width:  height
+                radius: height / 2
+                color:  qgcPal.primaryButton
+
+                QGCColoredImage {
+                    anchors.margins:    parent.height / 4
+                    anchors.fill:       parent
+                    source:             "/res/XDelete.svg"
+                    fillMode:           Image.PreserveAspectFit
+                    color:              qgcPal.text
+                }
+
+                QGCMouseArea {
+                    fillItem:   parent
+                    onClicked:  confirmCancelled()
                 }
             }
         }
     }
-
-    QGCColoredImage {
-        anchors.margins:    _margins
-        anchors.top:        parent.top
-        anchors.right:      parent.right
-        width:              ScreenTools.defaultFontPixelHeight
-        height:             width
-        sourceSize.height:  width
-        source:             "/res/XDelete.svg"
-        fillMode:           Image.PreserveAspectFit
-        color:              qgcPal.text
-
-        QGCMouseArea {
-            fillItem:   parent
-            onClicked:  confirmCancelled()
-        }
-    }
 }
+

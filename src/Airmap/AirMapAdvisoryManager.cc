@@ -72,6 +72,7 @@ AirMapAdvisoryManager::_requestAdvisories()
     }
     _valid = false;
     _advisories.clearAndDeleteContents();
+
     Advisory::Search::Parameters params;
     //-- Geometry
     Geometry::Polygon polygon;

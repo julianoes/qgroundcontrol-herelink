@@ -22,7 +22,7 @@ Item {
     width:          joystickRow.width * 1.1
     anchors.top:    parent.top
     anchors.bottom: parent.bottom
-    visible:        activeVehicle ? activeVehicle.sub : false
+    visible:        globals.activeVehicle ? globals.activeVehicle.sub : false
 
 
     Component {
@@ -58,13 +58,13 @@ Item {
 
                     QGCLabel { text: qsTr("Connected:") }
                     QGCLabel {
-                        text:  joystickManager.activeJoystick ? "Yes" : "No"
+                        text:  joystickManager.activeJoystick ? qsTr("Yes") : qsTr("No")
                         color: joystickManager.activeJoystick ? qgcPal.buttonText : "red"
                     }
                     QGCLabel { text: qsTr("Enabled:") }
                     QGCLabel {
-                        text:  activeVehicle && activeVehicle.joystickEnabled ? "Yes" : "No"
-                        color: activeVehicle && activeVehicle.joystickEnabled ? qgcPal.buttonText : "red"
+                        text:  globals.activeVehicle && globals.activeVehicle.joystickEnabled ? qsTr("Yes") : qsTr("No")
+                        color: globals.activeVehicle && globals.activeVehicle.joystickEnabled ? qgcPal.buttonText : "red"
                     }
                 }
             }
@@ -84,14 +84,25 @@ Item {
             sourceSize.height:  height
             source:             "/qmlimages/Joystick.png"
             fillMode:           Image.PreserveAspectFit
-            color:              activeVehicle && activeVehicle.joystickEnabled && joystickManager.activeJoystick ? qgcPal.buttonText : "red"
+            color: {
+                if(globals.activeVehicle && joystickManager.activeJoystick) {
+                    if(globals.activeVehicle.joystickEnabled) {
+                        // Everything ready to use joystick
+                        return qgcPal.buttonText
+                    }
+                    // Joystick is not enabled in the joystick configuration page
+                    return "yellow"
+                }
+                // Joystick not available or there is no active vehicle
+                return "red"
+            }
         }
     }
 
     MouseArea {
         anchors.fill:   parent
         onClicked: {
-            mainWindow.showPopUp(_root, joystickInfo)
+            mainWindow.showIndicatorPopup(_root, joystickInfo)
         }
     }
 }

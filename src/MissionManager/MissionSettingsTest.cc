@@ -9,7 +9,6 @@
 
 #include "MissionSettingsTest.h"
 #include "QGCApplication.h"
-#include "QGroundControlQmlGlobal.h"
 #include "SettingsManager.h"
 
 MissionSettingsTest::MissionSettingsTest(void)
@@ -22,7 +21,7 @@ void MissionSettingsTest::init(void)
 {
     VisualMissionItemTest::init();
 
-    _settingsItem = new MissionSettingsItem(_offlineVehicle, false /* flyView */, this);
+    _settingsItem = new MissionSettingsItem(_masterController, false /* flyView */);
 }
 
 void MissionSettingsTest::cleanup(void)

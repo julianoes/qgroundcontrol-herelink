@@ -22,12 +22,13 @@ Slider {
     // Value indicator starts display from zero instead of min value
     property bool zeroCentered: false
     property bool displayValue: false
+    property bool indicatorBarVisible: true
 
     style: SliderStyle {
         groove: Item {
             anchors.verticalCenter: parent.verticalCenter
-            implicitWidth:  Math.round(ScreenTools.defaultFontPixelHeight * 4.5)
-            implicitHeight: Math.round(ScreenTools.defaultFontPixelHeight * 0.3)
+            implicitWidth:          Math.round(ScreenTools.defaultFontPixelHeight * 4.5)
+            implicitHeight:         Math.round(ScreenTools.defaultFontPixelHeight * 0.3)
 
             Rectangle {
                 radius:         height / 2
@@ -40,6 +41,7 @@ Slider {
             Item {
                 id:     indicatorBar
                 clip:   true
+                visible: indicatorBarVisible
                 x:      _root.zeroCentered ? zeroCenteredIndicatorStart : 0
                 width:  _root.zeroCentered ? centerIndicatorWidth : styleData.handlePosition
                 height: parent.height
@@ -66,7 +68,9 @@ Slider {
             implicitWidth:  _radius * 2
             implicitHeight: _radius * 2
             radius:         _radius
-            property real _radius: Math.round(ScreenTools.defaultFontPixelHeight * 0.75)
+
+            property real _radius: Math.round(_root.implicitHeight / 2)
+
             Label {
                 text:               _root.value.toFixed( _root.maximumValue <= 1 ? 1 : 0)
                 visible:            _root.displayValue

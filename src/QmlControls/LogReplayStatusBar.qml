@@ -15,7 +15,7 @@ Rectangle {
     property var    _logReplayLink: null
 
     function pickLogFile() {
-        if (mainWindow.activeVehicle) {
+        if (globals.activeVehicle) {
             mainWindow.showMessageDialog(qsTr("Log Replay"), qsTr("You must close all connections prior to replaying a log."))
             return
         }
@@ -28,8 +28,7 @@ Rectangle {
     QGCFileDialog {
         id:                 filePicker
         title:              qsTr("Select Telemetery Log")
-        nameFilters:        [qsTr("Telemetry Logs (*.%1)").arg(_logFileExtension), qsTr("All Files (*)")]
-        fileExtension:      _logFileExtension
+        nameFilters:        [ qsTr("Telemetry Logs (*.%1)").arg(_logFileExtension), qsTr("All Files (*)") ]
         selectExisting:     true
         folder:             QGroundControl.settingsManager.appSettings.telemetrySavePath
         onAcceptedForLoad: {
@@ -70,6 +69,7 @@ Rectangle {
                 ListElement { text: "1x";   value: 1 }
                 ListElement { text: "2x";   value: 2 }
                 ListElement { text: "5x";   value: 5 }
+                ListElement { text: "10x";  value: 10 }
             }
 
             onActivated: controller.playbackSpeed = model.get(currentIndex).value
@@ -105,6 +105,17 @@ Rectangle {
             text:       qsTr("Load Telemetry Log")
             onClicked:  pickLogFile()
             visible:    !controller.link
+        }
+
+        QGCButton {
+            text:       qsTr("Close")
+            onClicked: {
+                var activeVehicle = QGroundControl.multiVehicleManager.activeVehicle
+                if (activeVehicle) {
+                    activeVehicle.closeVehicle()
+                }
+                QGroundControl.settingsManager.flyViewSettings.showLogReplayStatusBar.rawValue = false
+            }
         }
     }
 }

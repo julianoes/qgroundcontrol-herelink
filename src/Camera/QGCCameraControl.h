@@ -38,11 +38,11 @@ public:
     Q_PROPERTY(bool         isThermal           READ isThermal          NOTIFY infoChanged)
 
     QString uri             () { return QString(_streamInfo.uri);  }
-    qreal   aspectRatio     ();
-    qreal   hfov            () { return 180; }
-    int     type            () { return VIDEO_STREAM_TYPE_RTSP; }
-    int     streamID        () { return _streamInfo.camera_id; }
-    bool    isThermal       () { return false; }
+    qreal   aspectRatio     () const;
+    qreal   hfov            () const{ return 180; }
+    int     type            () const{ return VIDEO_STREAM_TYPE_RTSP; }
+    int     streamID        () const{ return _streamInfo.camera_id; }
+    bool    isThermal       () const{ return false; }
 
     bool    update          (const mavlink_video_stream_status_t* vs);
 
@@ -370,6 +370,7 @@ private:
     void    _updateRanges                   (Fact* pFact);
     void    _httpRequest                    (const QString& url);
     void    _handleDefinitionFile           (const QString& url);
+    void    _ftpDownloadComplete            (const QString& fileName, const QString& errorMsg);
 
     QStringList     _loadExclusions         (QDomNode option);
     QStringList     _loadUpdates            (QDomNode option);

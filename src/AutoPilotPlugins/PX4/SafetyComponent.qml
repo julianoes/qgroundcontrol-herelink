@@ -176,6 +176,7 @@ SetupPage {
                                     if(_collisionPrevention) {
                                         _collisionPrevention.value = index > 0 ? 5 : -1
                                         console.log('Collision prevention enabled: ' + _collisionPrevention.value)
+                                        showObstacleDistanceOverlayCheckBox.checked = _collisionPrevention.value > 0
                                     }
                                 }
                             }
@@ -198,7 +199,7 @@ SetupPage {
                             }
 
                             QGCLabel {
-                                text:               qsTr("Minimum Distance: (") + QGroundControl.appSettingsDistanceUnitsString + ")"
+                                text:               qsTr("Minimum Distance: (") + QGroundControl.unitsConversion.appSettingsHorizontalDistanceUnitsString + ")"
                                 Layout.fillWidth:   true
                                 Layout.alignment:   Qt.AlignVCenter
                             }
@@ -209,15 +210,15 @@ SetupPage {
                                 Layout.minimumHeight:   ScreenTools.defaultFontPixelHeight * 2
                                 Layout.fillWidth:   true
                                 Layout.fillHeight:  true
-                                maximumValue:       QGroundControl.metersToAppSettingsDistanceUnits(15)
-                                minimumValue:       QGroundControl.metersToAppSettingsDistanceUnits(1)
+                                maximumValue:       QGroundControl.unitsConversion.metersToAppSettingsHorizontalDistanceUnits(15)
+                                minimumValue:       QGroundControl.unitsConversion.metersToAppSettingsHorizontalDistanceUnits(1)
                                 stepSize:           1
                                 displayValue:       true
                                 updateValueWhileDragging:   false
                                 Layout.alignment:   Qt.AlignVCenter
                                 value: {
                                     if (_collisionPrevention && _collisionPrevention.rawValue > 0) {
-                                        return QGroundControl.metersToAppSettingsDistanceUnits(_collisionPrevention.rawValue)
+                                        return QGroundControl.unitsConversion.metersToAppSettingsHorizontalDistanceUnits(_collisionPrevention.rawValue)
                                     } else {
                                         return 1;
                                     }
@@ -226,10 +227,19 @@ SetupPage {
                                     if(_collisionPrevention) {
                                         //-- Negative means disabled
                                         if(_collisionPrevention.rawValue >= 0) {
-                                            _collisionPrevention.rawValue = QGroundControl.appSettingsDistanceUnitsToMeters(value)
+                                            _collisionPrevention.rawValue = QGroundControl.unitsConversion.appSettingsHorizontalDistanceUnitsToMeters(value)
                                         }
                                     }
                                 }
+                            }
+
+                            FactCheckBox {
+                                id:         showObstacleDistanceOverlayCheckBox
+                                text:       qsTr("Show obstacle distance overlay")
+                                visible:    _showObstacleDistanceOverlay.visible
+                                fact:       _showObstacleDistanceOverlay
+
+                                property Fact _showObstacleDistanceOverlay: QGroundControl.settingsManager.flyViewSettings.showObstacleDistanceOverlay
                             }
                         }
                     }

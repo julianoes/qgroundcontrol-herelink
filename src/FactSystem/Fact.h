@@ -7,12 +7,7 @@
  *
  ****************************************************************************/
 
-
-/// @file
-///     @author Don Gagne <don@thegagnes.com>
-
-#ifndef Fact_H
-#define Fact_H
+#pragma once
 
 #include "FactMetaData.h"
 
@@ -43,6 +38,7 @@ public:
     Q_PROPERTY(int          componentId             READ componentId                                        CONSTANT)
     Q_PROPERTY(QStringList  bitmaskStrings          READ bitmaskStrings                                     NOTIFY bitmaskStringsChanged)
     Q_PROPERTY(QVariantList bitmaskValues           READ bitmaskValues                                      NOTIFY bitmaskValuesChanged)
+    Q_PROPERTY(QStringList  selectedBitmaskStrings  READ selectedBitmaskStrings                             NOTIFY valueChanged)
     Q_PROPERTY(int          decimalPlaces           READ decimalPlaces                                      CONSTANT)
     Q_PROPERTY(QVariant     defaultValue            READ cookedDefaultValue                                 CONSTANT)
     Q_PROPERTY(QString      defaultValueString      READ cookedDefaultValueString                           CONSTANT)
@@ -95,6 +91,7 @@ public:
     QString         cookedDefaultValueString(void) const;
     QStringList     bitmaskStrings          (void) const;
     QVariantList    bitmaskValues           (void) const;
+    QStringList     selectedBitmaskStrings  (void) const;
     int             enumIndex               (void);         // This is not const, since an unknown value can modify the enum lists
     QStringList     enumStrings             (void) const;
     QString         enumStringValue         (void);         // This is not const, since an unknown value can modify the enum lists
@@ -215,5 +212,3 @@ protected:
     FactValueSliderListModel*   _valueSliderModel;
     bool                        _ignoreQGCRebootRequired;
 };
-
-#endif

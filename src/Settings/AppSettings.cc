@@ -27,25 +27,54 @@ const char* AppSettings::kmlFileExtension =         "kml";
 const char* AppSettings::shpFileExtension =         "shp";
 const char* AppSettings::logFileExtension =         "ulg";
 
-const char* AppSettings::parameterDirectory =       "Parameters";
-const char* AppSettings::telemetryDirectory =       "Telemetry";
-const char* AppSettings::missionDirectory =         "Missions";
-const char* AppSettings::logDirectory =             "Logs";
-const char* AppSettings::videoDirectory =           "Video";
-const char* AppSettings::crashDirectory =           "CrashLogs";
+const char* AppSettings::parameterDirectory =       QT_TRANSLATE_NOOP("AppSettings", "Parameters");
+const char* AppSettings::telemetryDirectory =       QT_TRANSLATE_NOOP("AppSettings", "Telemetry");
+const char* AppSettings::missionDirectory =         QT_TRANSLATE_NOOP("AppSettings", "Missions");
+const char* AppSettings::logDirectory =             QT_TRANSLATE_NOOP("AppSettings", "Logs");
+const char* AppSettings::videoDirectory =           QT_TRANSLATE_NOOP("AppSettings", "Video");
+const char* AppSettings::photoDirectory =           QT_TRANSLATE_NOOP("AppSettings", "Photo");
+const char* AppSettings::crashDirectory =           QT_TRANSLATE_NOOP("AppSettings", "CrashLogs");
+const char* AppSettings::customActionsDirectory =   QT_TRANSLATE_NOOP("AppSettings", "CustomActions");
+
+// Release languages are 90%+ complete
+QList<int> AppSettings::_rgReleaseLanguages = {
+    QLocale::AnyLanguage,  // System
+    QLocale::Chinese,
+    QLocale::English,
+    QLocale::Korean,
+    QLocale::Azerbaijani,
+};
+// Partial languages are 40%+ complete
+QList<int> AppSettings::_rgPartialLanguages = {
+    QLocale::German,
+    QLocale::Turkish,
+};
 
 DECLARE_SETTINGGROUP(App, "")
 {
     qmlRegisterUncreatableType<AppSettings>("QGroundControl.SettingsManager", 1, 0, "AppSettings", "Reference only");
     QGCPalette::setGlobalTheme(indoorPalette()->rawValue().toBool() ? QGCPalette::Dark : QGCPalette::Light);
 
-    // virtualJoystickCentralized -> virtualJoystickAutoCenterThrottle
     QSettings settings;
+
+    // These two "type" keys were changed to "class" values
+    static const char* deprecatedFirmwareTypeKey    = "offlineEditingFirmwareType";
+    static const char* deprecatedVehicleTypeKey     = "offlineEditingVehicleType";
+    if (settings.contains(deprecatedFirmwareTypeKey)) {
+        settings.setValue(deprecatedFirmwareTypeKey, QGCMAVLink::firmwareClass(static_cast<MAV_AUTOPILOT>(settings.value(deprecatedFirmwareTypeKey).toInt())));
+    }
+    if (settings.contains(deprecatedVehicleTypeKey)) {
+        settings.setValue(deprecatedVehicleTypeKey, QGCMAVLink::vehicleClass(static_cast<MAV_TYPE>(settings.value(deprecatedVehicleTypeKey).toInt())));
+    }
+
+    QStringList deprecatedKeyNames  = { "virtualJoystickCentralized",           "offlineEditingFirmwareType",   "offlineEditingVehicleType" };
+    QStringList newKeyNames         = { "virtualJoystickAutoCenterThrottle",    "offlineEditingFirmwareClass",  "offlineEditingVehicleClass" };
     settings.beginGroup(_settingsGroup);
-    QString deprecatedVirtualJoystickCentralizedKey("virtualJoystickCentralized");
-    if (settings.contains(deprecatedVirtualJoystickCentralizedKey)) {
-        settings.setValue(virtualJoystickAutoCenterThrottleName, settings.value(deprecatedVirtualJoystickCentralizedKey));
-        settings.remove(deprecatedVirtualJoystickCentralizedKey);
+    for (int i=0; i<deprecatedKeyNames.count(); i++) {
+        if (settings.contains(deprecatedKeyNames[i])) {
+            settings.setValue(newKeyNames[i], settings.value(deprecatedKeyNames[i]));
+            settings.remove(deprecatedKeyNames[i]);
+        }
     }
 
     // Instantiate savePath so we can check for override and setup default path if needed
@@ -80,13 +109,10 @@ DECLARE_SETTINGGROUP(App, "")
     connect(savePathFact, &Fact::rawValueChanged, this, &AppSettings::_checkSavePathDirectories);
 
     _checkSavePathDirectories();
-    //-- Keep track of language changes
-    SettingsFact* languageFact = qobject_cast<SettingsFact*>(language());
-    connect(languageFact, &Fact::rawValueChanged, this, &AppSettings::_languageChanged);
 }
 
-DECLARE_SETTINGSFACT(AppSettings, offlineEditingFirmwareType)
-DECLARE_SETTINGSFACT(AppSettings, offlineEditingVehicleType)
+DECLARE_SETTINGSFACT(AppSettings, offlineEditingFirmwareClass)
+DECLARE_SETTINGSFACT(AppSettings, offlineEditingVehicleClass)
 DECLARE_SETTINGSFACT(AppSettings, offlineEditingCruiseSpeed)
 DECLARE_SETTINGSFACT(AppSettings, offlineEditingHoverSpeed)
 DECLARE_SETTINGSFACT(AppSettings, offlineEditingAscentSpeed)
@@ -102,11 +128,14 @@ DECLARE_SETTINGSFACT(AppSettings, virtualJoystickAutoCenterThrottle)
 DECLARE_SETTINGSFACT(AppSettings, appFontPointSize)
 DECLARE_SETTINGSFACT(AppSettings, showLargeCompass)
 DECLARE_SETTINGSFACT(AppSettings, savePath)
-DECLARE_SETTINGSFACT(AppSettings, autoLoadMissions)
 DECLARE_SETTINGSFACT(AppSettings, useChecklist)
 DECLARE_SETTINGSFACT(AppSettings, enforceChecklist)
 DECLARE_SETTINGSFACT(AppSettings, mapboxToken)
+DECLARE_SETTINGSFACT(AppSettings, mapboxAccount)
+DECLARE_SETTINGSFACT(AppSettings, mapboxStyle)
 DECLARE_SETTINGSFACT(AppSettings, esriToken)
+DECLARE_SETTINGSFACT(AppSettings, customURL)
+DECLARE_SETTINGSFACT(AppSettings, vworldToken)
 DECLARE_SETTINGSFACT(AppSettings, defaultFirmwareType)
 DECLARE_SETTINGSFACT(AppSettings, gstDebugLevel)
 DECLARE_SETTINGSFACT(AppSettings, followTarget)
@@ -114,10 +143,12 @@ DECLARE_SETTINGSFACT(AppSettings, apmStartMavlinkStreams)
 DECLARE_SETTINGSFACT(AppSettings, enableTaisync)
 DECLARE_SETTINGSFACT(AppSettings, enableTaisyncVideo)
 DECLARE_SETTINGSFACT(AppSettings, enableMicrohard)
-DECLARE_SETTINGSFACT(AppSettings, language)
 DECLARE_SETTINGSFACT(AppSettings, disableAllPersistence)
 DECLARE_SETTINGSFACT(AppSettings, usePairing)
 DECLARE_SETTINGSFACT(AppSettings, saveCsvTelemetry)
+DECLARE_SETTINGSFACT(AppSettings, firstRunPromptIdsShown)
+DECLARE_SETTINGSFACT(AppSettings, forwardMavlink)
+DECLARE_SETTINGSFACT(AppSettings, forwardMavlinkHostName)
 
 DECLARE_SETTINGSFACT_NO_FUNC(AppSettings, indoorPalette)
 {
@@ -128,7 +159,47 @@ DECLARE_SETTINGSFACT_NO_FUNC(AppSettings, indoorPalette)
     return _indoorPaletteFact;
 }
 
-void AppSettings::_languageChanged()
+DECLARE_SETTINGSFACT_NO_FUNC(AppSettings, qLocaleLanguage)
+{
+    if (!_qLocaleLanguageFact) {
+        _qLocaleLanguageFact = _createSettingsFact(qLocaleLanguageName);
+        connect(_qLocaleLanguageFact, &Fact::rawValueChanged, this, &AppSettings::_qLocaleLanguageChanged);
+
+        FactMetaData*   metaData            = _qLocaleLanguageFact->metaData();
+        QStringList     rgOriginalStrings   = metaData->enumStrings();
+        QVariantList    rgOriginalValues    = metaData->enumValues();
+        QStringList     rgUpdatedStrings;
+        QVariantList    rgUpdatedValues;
+
+        // All builds contains released and partial languages
+        for (int i=0; i<rgOriginalStrings.count(); i++) {
+            if (_rgReleaseLanguages.contains(rgOriginalValues[i].toInt())) {
+                rgUpdatedStrings.append(rgOriginalStrings[i]);
+                rgUpdatedValues.append(rgOriginalValues[i]);
+            }
+        }
+        for (int i=0; i<rgOriginalStrings.count(); i++) {
+            if (_rgPartialLanguages.contains(rgOriginalValues[i].toInt())) {
+                rgUpdatedStrings.append(rgOriginalStrings[i] + AppSettings::tr(" (Partial)"));
+                rgUpdatedValues.append(rgOriginalValues[i].toInt());
+            }
+        }
+#ifdef DAILY_BUILD
+        // Only daily builds include full set
+        for (int i=0; i<rgOriginalStrings.count(); i++) {
+            int languageId = rgOriginalValues[i].toInt();
+            if (!_rgReleaseLanguages.contains(languageId)  || !_rgPartialLanguages.contains(languageId)) {
+                rgUpdatedStrings.append(rgOriginalStrings[i] + AppSettings::tr(" (Test only)"));
+                rgUpdatedValues.append(rgOriginalValues[i].toInt());
+            }
+        }
+#endif
+        metaData->setEnumInfo(rgUpdatedStrings, rgUpdatedValues);
+    }
+    return _qLocaleLanguageFact;
+}
+
+void AppSettings::_qLocaleLanguageChanged()
 {
     qgcApp()->setLanguage();
 }
@@ -145,7 +216,9 @@ void AppSettings::_checkSavePathDirectories(void)
         savePathDir.mkdir(missionDirectory);
         savePathDir.mkdir(logDirectory);
         savePathDir.mkdir(videoDirectory);
+        savePathDir.mkdir(photoDirectory);
         savePathDir.mkdir(crashDirectory);
+        savePathDir.mkdir(customActionsDirectory);
     }
 }
 
@@ -204,6 +277,16 @@ QString AppSettings::videoSavePath(void)
     return QString();
 }
 
+QString AppSettings::photoSavePath(void)
+{
+    QString path = savePath()->rawValue().toString();
+    if (!path.isEmpty() && QDir(path).exists()) {
+        QDir dir(path);
+        return dir.filePath(photoDirectory);
+    }
+    return QString();
+}
+
 QString AppSettings::crashSavePath(void)
 {
     QString path = savePath()->rawValue().toString();
@@ -214,25 +297,75 @@ QString AppSettings::crashSavePath(void)
     return QString();
 }
 
-MAV_AUTOPILOT AppSettings::offlineEditingFirmwareTypeFromFirmwareType(MAV_AUTOPILOT firmwareType)
+QString AppSettings::customActionsSavePath(void)
 {
-    if (firmwareType != MAV_AUTOPILOT_PX4 && firmwareType != MAV_AUTOPILOT_ARDUPILOTMEGA) {
-        firmwareType = MAV_AUTOPILOT_GENERIC;
+    QString path = savePath()->rawValue().toString();
+    if (!path.isEmpty() && QDir(path).exists()) {
+        QDir dir(path);
+        return dir.filePath(customActionsDirectory);
     }
-    return firmwareType;
+    return QString();
 }
 
-MAV_TYPE AppSettings::offlineEditingVehicleTypeFromVehicleType(MAV_TYPE vehicleType)
+QList<int> AppSettings::firstRunPromptsIdsVariantToList(const QVariant& firstRunPromptIds)
 {
-    if (QGCMAVLink::isRover(vehicleType)) {
-        return MAV_TYPE_GROUND_ROVER;
-    } else if (QGCMAVLink::isSub(vehicleType)) {
-        return MAV_TYPE_SUBMARINE;
-    } else if (QGCMAVLink::isVTOL(vehicleType)) {
-        return MAV_TYPE_VTOL_QUADROTOR;
-    } else if (QGCMAVLink::isFixedWing(vehicleType)) {
-        return MAV_TYPE_FIXED_WING;
-    } else {
-        return MAV_TYPE_QUADROTOR;
+    QList<int> rgIds;
+
+    QStringList strIdList = firstRunPromptIds.toString().split(",", Qt::SkipEmptyParts);
+
+    for (const QString& strId: strIdList) {
+        rgIds.append(strId.toInt());
     }
+    return rgIds;
+}
+
+QVariant AppSettings::firstRunPromptsIdsListToVariant(const QList<int>& rgIds)
+{
+    QStringList strList;
+    for (int id: rgIds) {
+        strList.append(QString::number(id));
+    }
+    return QVariant(strList.join(","));
+}
+
+void AppSettings::firstRunPromptIdsMarkIdAsShown(int id)
+{
+    QList<int> rgIds = firstRunPromptsIdsVariantToList(firstRunPromptIdsShown()->rawValue());
+    if (!rgIds.contains(id)) {
+        rgIds.append(id);
+        firstRunPromptIdsShown()->setRawValue(firstRunPromptsIdsListToVariant(rgIds));
+    }
+}
+
+/// Hack to provide language settings as early in the boot process as possible. Must be known
+/// prior to loading any json files.
+QLocale::Language AppSettings::_qLocaleLanguageID(void)
+{
+    QSettings settings;
+
+    if (settings.childKeys().contains("language")) {
+        // We need to convert to the new settings key/values
+#if 0
+        // Old vales
+        "enumStrings":      "System,български (Bulgarian),中文 (Chinese),Nederlands (Dutch),English,Suomi (Finnish),Français (French),Deutsche (German),Ελληνικά (Greek), עברית (Hebrew),Italiano (Italian),日本語 (Japanese),한국어 (Korean),Norsk (Norwegian),Polskie (Polish),Português (Portuguese),Pусский (Russian),Español (Spanish),Svenska (Swedish),Türk (Turkish),Azerbaijani (Azerbaijani)",
+        "enumValues":       "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20",
+#endif
+        static QList<int> rgNewValues = { 0,20,25,30,31,36,37,42,43,48,58,59,66,85,90,91,96,111,114,125,15 };
+
+        int oldValue = settings.value("language").toInt();
+        settings.setValue(qLocaleLanguageName, rgNewValues[oldValue]);
+        settings.remove("language");
+    }
+
+    QLocale::Language id = settings.value(qLocaleLanguageName, QLocale::AnyLanguage).value<QLocale::Language>();
+    if (id == QLocale::AnyLanguage) {
+#ifndef DAILY_BUILD
+        // Stable builds only support released and partial languages
+        if (!_rgReleaseLanguages.contains(id) && _rgPartialLanguages.contains(id)) {
+            id = QLocale::English;
+        }
+#endif
+    }
+
+    return id;
 }

@@ -37,7 +37,6 @@ Map {
     property bool   isSatelliteMap:                 activeMapType.name.indexOf("Satellite") > -1 || activeMapType.name.indexOf("Hybrid") > -1
     property var    gcsPosition:                    QGroundControl.qgcPositionManger.gcsPosition
     property real   gcsHeading:                     QGroundControl.qgcPositionManger.gcsHeading
-    property bool   userPanned:                     false   ///< true: the user has manually panned the map
     property bool   allowGCSLocationCenter:         false   ///< true: map will center/zoom to gcs location one time
     property bool   allowVehicleLocationCenter:     false   ///< true: map will center/zoom to vehicle location one time
     property bool   firstGCSPositionReceived:       false   ///< true: first gcs position update was responded to
@@ -46,7 +45,8 @@ Map {
 
     readonly property real  maxZoomLevel: 20
 
-    property var    activeVehicleCoordinate:        activeVehicle ? activeVehicle.coordinate : QtPositioning.coordinate()
+    property var    _activeVehicle:             QGroundControl.multiVehicleManager.activeVehicle
+    property var    _activeVehicleCoordinate:   _activeVehicle ? _activeVehicle.coordinate : QtPositioning.coordinate()
 
     function setVisibleRegion(region) {
         // TODO: Is this still necessary with Qt 5.11?
@@ -58,20 +58,21 @@ Map {
     }
 
     function _possiblyCenterToVehiclePosition() {
-        if (!firstVehiclePositionReceived && allowVehicleLocationCenter && activeVehicleCoordinate.isValid) {
+        if (!firstVehiclePositionReceived && allowVehicleLocationCenter && _activeVehicleCoordinate.isValid) {
             firstVehiclePositionReceived = true
-            center = activeVehicleCoordinate
+            center = _activeVehicleCoordinate
             zoomLevel = QGroundControl.flightMapInitialZoom
         }
     }
 
     function centerToSpecifiedLocation() {
-        mainWindow.showComponentDialog(specifyMapPositionDialog, qsTr("Specify Position"), mainWindow.showDialogDefaultWidth, StandardButton.Close)
+        specifyMapPositionDialog.createObject(mainWindow).open()
     }
 
     Component {
         id: specifyMapPositionDialog
         EditPositionDialog {
+            title:                  qsTr("Specify Position")
             coordinate:             center
             onCoordinateChanged:    center = coordinate
         }
@@ -82,18 +83,10 @@ Map {
         if (gcsPosition.isValid && allowGCSLocationCenter && !firstGCSPositionReceived && !firstVehiclePositionReceived) {
             firstGCSPositionReceived = true
             //-- Only center on gsc if we have no vehicle (and we are supposed to do so)
-            var activeVehicleCoordinate = activeVehicle ? activeVehicle.coordinate : QtPositioning.coordinate()
-            if(QGroundControl.settingsManager.flyViewSettings.keepMapCenteredOnVehicle.rawValue || !activeVehicleCoordinate.isValid)
+            var _activeVehicleCoordinate = _activeVehicle ? _activeVehicle.coordinate : QtPositioning.coordinate()
+            if(QGroundControl.settingsManager.flyViewSettings.keepMapCenteredOnVehicle.rawValue || !_activeVehicleCoordinate.isValid)
                 center = gcsPosition
         }
-    }
-
-    // We track whether the user has panned or not to correctly handle automatic map positioning
-    Connections {
-        target: gesture
-
-        onPanFinished:      userPanned = true
-        onFlickFinished:    userPanned = true
     }
 
     function updateActiveMapType() {
@@ -108,21 +101,23 @@ Map {
         }
     }
 
-    onActiveVehicleCoordinateChanged: _possiblyCenterToVehiclePosition()
+    on_ActiveVehicleCoordinateChanged: _possiblyCenterToVehiclePosition()
 
-    Component.onCompleted: {
-        updateActiveMapType()
-        _possiblyCenterToVehiclePosition()
+    onMapReadyChanged: {
+        if (_map.mapReady) {
+            updateActiveMapType()
+            _possiblyCenterToVehiclePosition()
+        }
     }
 
     Connections {
         target:             QGroundControl.settingsManager.flightMapSettings.mapType
-        onRawValueChanged:  updateActiveMapType()
+        function onRawValueChanged() { updateActiveMapType() }
     }
 
     Connections {
         target:             QGroundControl.settingsManager.flightMapSettings.mapProvider
-        onRawValueChanged:  updateActiveMapType()
+        function onRawValueChanged() { updateActiveMapType() }
     }
 
     /// Ground Station location

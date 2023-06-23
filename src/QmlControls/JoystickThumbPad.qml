@@ -1,6 +1,7 @@
-import QtQuick                  2.3
+import QtQuick                  2.12
 import QtQuick.Controls         1.2
 
+import QGroundControl               1.0
 import QGroundControl.Palette       1.0
 import QGroundControl.ScreenTools   1.0
 
@@ -17,6 +18,11 @@ Item {
 
     property real   _centerXY:              width / 2
     property bool   _processTouchPoints:    false
+    property color  _fgColor:               QGroundControl.globalPalette.text
+    property color  _bgColor:               QGroundControl.globalPalette.window
+    property real   _hatWidth:              ScreenTools.defaultFontPixelHeight
+    property real   _hatWidthHalf:          _hatWidth / 2
+
     property real   stickPositionX:         _centerXY
     property real   stickPositionY:         yAxisReCenter ? _centerXY : height
 
@@ -87,9 +93,33 @@ Item {
 
     Image {
         anchors.fill:       parent
-        source:             lightColors ? "/res/JoystickBezel.png" : "/res/JoystickBezelLight.png"
+        source:             "/res/JoystickBezelLight.png"
         mipmap:             true
         smooth:             true
+    }
+
+    Rectangle {
+        anchors.fill:       parent
+        radius:             width / 2
+        color:              _bgColor
+        opacity:            0.5
+
+        Rectangle {
+            anchors.margins:    parent.width / 4
+            anchors.fill:       parent
+            radius:             width / 2
+            border.color:       _fgColor
+            border.width:       2
+            color:              "transparent"
+        }
+
+        Rectangle {
+            anchors.fill:       parent
+            radius:             width / 2
+            border.color:       _fgColor
+            border.width:       2
+            color:              "transparent"
+        }
     }
 
     QGCColoredImage {
@@ -149,34 +179,14 @@ Item {
     }
 
     Rectangle {
-        anchors.margins:    parent.width / 4
-        anchors.fill:       parent
-        radius:             width / 2
-        border.color:       mapPal.thumbJoystick
-        border.width:       2
-        color:              Qt.rgba(0,0,0,0)
-    }
-
-    Rectangle {
-        anchors.fill:       parent
-        radius:             width / 2
-        border.color:       mapPal.thumbJoystick
-        border.width:       2
-        color:              Qt.rgba(0,0,0,0)
-    }
-
-    Rectangle {
-        width:  hatWidth
-        height: hatWidth
-        radius: hatWidthHalf
-        border.color: lightColors ? "white" : "black"
-        border.width: 1
-        color:  mapPal.thumbJoystick
-        x:      stickPositionX - hatWidthHalf
-        y:      stickPositionY - hatWidthHalf
-
-        readonly property real hatWidth:        ScreenTools.defaultFontPixelHeight
-        readonly property real hatWidthHalf:    ScreenTools.defaultFontPixelHeight / 2
+        width:          _hatWidth
+        height:         _hatWidth
+        radius:         _hatWidthHalf
+        border.color:   _fgColor
+        border.width:   1
+        color:          Qt.rgba(_fgColor.r, _fgColor.g, _fgColor.b, 0.5)
+        x:              stickPositionX - _hatWidthHalf
+        y:              stickPositionY - _hatWidthHalf
     }
 
     Connections {
@@ -195,11 +205,12 @@ Item {
     }
 
     MultiPointTouchArea {
-        anchors.fill:       parent
-        minimumTouchPoints: 1
-        maximumTouchPoints: 1
-        touchPoints:        [ TouchPoint { id: touchPoint } ]
-        onPressed:          _joyRoot.thumbDown(touchPoints)
-        onReleased:         _joyRoot.reCenter()
+        anchors.fill:           parent
+        anchors.bottomMargin:   yAxisReCenter ? 0 : -_hatWidthHalf
+        minimumTouchPoints:     1
+        maximumTouchPoints:     1
+        touchPoints:            [ TouchPoint { id: touchPoint } ]
+        onPressed:              _joyRoot.thumbDown(touchPoints)
+        onReleased:             _joyRoot.reCenter()
     }
 }

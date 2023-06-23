@@ -26,7 +26,7 @@ UASMessage::UASMessage(int componentid, int severity, QString text)
     _text     = text;
 }
 
-bool UASMessage::severityIsError()
+bool UASMessage::severityIsError() const
 {
     switch (_severity) {
         case MAV_SEVERITY_EMERGENCY:
@@ -202,7 +202,7 @@ void UASMessageHandler::handleTextMessage(int, int compId, int severity, QString
     emit textMessageCountChanged(count);
 
     if (_showErrorsInToolbar && message->severityIsError()) {
-        _app->showMessage(message->getText().toHtmlEscaped());
+        _app->showCriticalVehicleMessage(message->getText().toHtmlEscaped());
     }
 }
 

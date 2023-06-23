@@ -21,7 +21,6 @@ import QGroundControl.ScreenTools   1.0
 AnalyzePage {
     id:                 logDownloadPage
     pageComponent:      pageComponent
-    pageName:           qsTr("Log Download")
     pageDescription:    qsTr("Log Download allows you to download binary log files from your vehicle. Click Refresh to get list of available logs.")
 
     property real _margin:          ScreenTools.defaultFontPixelWidth
@@ -61,6 +60,7 @@ AnalyzePage {
                     width: ScreenTools.defaultFontPixelWidth * 6
                     horizontalAlignment: Text.AlignHCenter
                     delegate : Text  {
+                        color: styleData.textColor
                         horizontalAlignment: Text.AlignHCenter
                         text: {
                             var o = logController.model.get(styleData.row)
@@ -74,6 +74,7 @@ AnalyzePage {
                     width: ScreenTools.defaultFontPixelWidth * 34
                     horizontalAlignment: Text.AlignHCenter
                     delegate: Text  {
+                        color: styleData.textColor
                         text: {
                             var o = logController.model.get(styleData.row)
                             if (o) {
@@ -96,6 +97,7 @@ AnalyzePage {
                     width: ScreenTools.defaultFontPixelWidth * 18
                     horizontalAlignment: Text.AlignHCenter
                     delegate : Text  {
+                        color: styleData.textColor
                         horizontalAlignment: Text.AlignRight
                         text: {
                             var o = logController.model.get(styleData.row)
@@ -109,6 +111,7 @@ AnalyzePage {
                     width: ScreenTools.defaultFontPixelWidth * 22
                     horizontalAlignment: Text.AlignHCenter
                     delegate : Text  {
+                        color: styleData.textColor
                         horizontalAlignment: Text.AlignHCenter
                         text: {
                             var o = logController.model.get(styleData.row)
@@ -170,21 +173,10 @@ AnalyzePage {
                     enabled:    !logController.requestingList && !logController.downloadingLogs && logController.model.count > 0
                     text:       qsTr("Erase All")
                     width:      _butttonWidth
-                    onClicked:  mainWindow.showComponentDialog(
-                        eraseAllMessage,
-                        qsTr("Delete All Log Files"),
-                        mainWindow.showDialogDefaultWidth,
-                        StandardButton.Yes | StandardButton.No)
-                    Component {
-                        id: eraseAllMessage
-                        QGCViewMessage {
-                            message:    qsTr("All log files will be erased permanently. Is this really what you want?")
-                            function accept() {
-                                logController.eraseAll()
-                                hideDialog()
-                            }
-                        }
-                    }
+                    onClicked:  mainWindow.showMessageDialog(qsTr("Delete All Log Files"),
+                                                             qsTr("All log files will be erased permanently. Is this really what you want?"),
+                                                             StandardButton.Yes | StandardButton.No,
+                                                             function() { logController.eraseAll() })
                 }
                 QGCButton {
                     text:       qsTr("Cancel")

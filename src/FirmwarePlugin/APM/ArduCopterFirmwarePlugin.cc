@@ -136,20 +136,6 @@ bool ArduCopterFirmwarePlugin::multiRotorXConfig(Vehicle* vehicle)
     return vehicle->parameterManager()->getParameter(FactSystem::defaultComponentId, "FRAME")->rawValue().toInt() != 0;
 }
 
-bool ArduCopterFirmwarePlugin::vehicleYawsToNextWaypointInMission(const Vehicle* vehicle) const
-{
-    if (vehicle->isOfflineEditingVehicle()) {
-        return FirmwarePlugin::vehicleYawsToNextWaypointInMission(vehicle);
-    } else {
-        if (vehicle->multiRotor() && vehicle->parameterManager()->parameterExists(FactSystem::defaultComponentId, QStringLiteral("WP_YAW_BEHAVIOR"))) {
-            Fact* yawMode = vehicle->parameterManager()->getParameter(FactSystem::defaultComponentId, QStringLiteral("WP_YAW_BEHAVIOR"));
-            return yawMode && yawMode->rawValue().toInt() != 0;
-        }
-    }
-    return true;
-}
-
-    // Follow me not ready for Stable
 void ArduCopterFirmwarePlugin::sendGCSMotionReport(Vehicle* vehicle, FollowMe::GCSMotionReport& motionReport, uint8_t estimatationCapabilities)
 {
     _sendGCSMotionReport(vehicle, motionReport, estimatationCapabilities);

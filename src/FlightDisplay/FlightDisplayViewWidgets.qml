@@ -21,11 +21,11 @@ import QGroundControl.Controls      1.0
 import QGroundControl.Palette       1.0
 import QGroundControl.Vehicle       1.0
 import QGroundControl.FlightMap     1.0
-import QGroundControl.Airspace      1.0
-import QGroundControl.Airmap        1.0
 
-Item {
-    id: widgetRoot
+Loader {
+    width:  parent.width
+    source: QGroundControl.settingsManager.flyViewSettings.alternateInstrumentPanel.rawValue ?
+                "qrc:/qml/QGCInstrumentWidgetAlternate.qml" : "qrc:/qml/QGCInstrumentWidget.qml"
 
     readonly property real  _rightPanelWidth: Math.min(parent.width / 3, ScreenTools.defaultFontPixelWidth * 30)
 

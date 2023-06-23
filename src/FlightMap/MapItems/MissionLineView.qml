@@ -7,7 +7,6 @@
  *
  ****************************************************************************/
 
-
 import QtQuick          2.3
 import QtLocation       5.3
 import QtPositioning    5.3
@@ -20,8 +19,14 @@ MapItemView {
     property bool showSpecialVisual: false
     delegate: MapPolyline {
         line.width: 3
-        line.color: object && showSpecialVisual && object.specialVisual ? "green" : "#be781c"                           // Hack, can't get palette to work in here
+        // Note: Special visuals for ROI are hacked out for now since they are not working correctly
+        line.color: _terrainCollision ?
+                        "red" :
+                        (false/*showSpecialVisual*/ ? "green" : QGroundControl.globalPalette.mapMissionTrajectory)
         z:          QGroundControl.zOrderWaypointLines
         path:       object && object.coordinate1.isValid && object.coordinate2.isValid ? [ object.coordinate1, object.coordinate2 ] : []
+
+        property bool _terrainCollision:    object && object.terrainCollision
+        property bool _showSpecialVisual:   object && showSpecialVisual && object.specialVisual
     }
 }
