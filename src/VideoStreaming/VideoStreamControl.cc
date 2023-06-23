@@ -171,7 +171,7 @@ void VideoStreamControl::_handleVideoStreamInfo(mavlink_message_t& message)
         emit videoResolutionChanged();
     }
     qCDebug(VideoStreamControlLog) << "Video stream resolution:" << _videoResolution;
-    _cameraIdInUse = streamInfo.camera_id;
+    _cameraIdInUse = streamInfo.stream_id;
     qCDebug(VideoStreamControlLog) << "Camera id in use:" <<  _cameraIdInUse;
 
     if (!uriNotChange) {
@@ -223,7 +223,7 @@ void VideoStreamControl::_requestVideoStreamInfo()
     mavlink_msg_command_long_pack(_mavlinkProtocol->getSystemId(), _mavlinkProtocol->getComponentId(), &msg, _systemId, MAV_COMP_ID_CAMERA, MAV_CMD_REQUEST_VIDEO_STREAM_INFORMATION, 0, 0, 0, 0, 0, 0, 0, 0);
 
     int len = mavlink_msg_to_send_buffer(buffer, &msg);
-    _linkInterface->writeBytesSafe((const char*)buffer, len);
+    _linkInterface->writeBytesThreadSafe((const char*)buffer, len);
     qCDebug(VideoStreamControlLog) << "Request video stream info is sent" << _systemId;
 }
 
@@ -270,7 +270,7 @@ void VideoStreamControl::_startVideoStreaming() {
     uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
     int len = mavlink_msg_to_send_buffer(buffer, &msg);
 
-    _linkInterface->writeBytesSafe((const char*)buffer, len);
+    _linkInterface->writeBytesThreadSafe((const char*)buffer, len);
     _requestVideoStreamInfo();
 }
 
@@ -332,12 +332,12 @@ void VideoStreamControl::_setVideoResolution(int h, int v)
         return;
     }
 
-    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
-    mavlink_message_t msg;
-    mavlink_msg_set_video_stream_settings_pack(_mavlinkProtocol->getSystemId(), _mavlinkProtocol->getComponentId(), &msg, _systemId, MAV_COMP_ID_CAMERA, _cameraIdSetting, 0, h, v, 0, 0, "");
-    int len = mavlink_msg_to_send_buffer(buffer, &msg);
-    _linkInterface->writeBytesSafe((const char*)buffer, len);
-     qCDebug(VideoStreamControlLog) << "set stream resolution sent for " << h << "x" << v;
+    //uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+    //mavlink_message_t msg;
+    //mavlink_msg_set_video_stream_settings_pack(_mavlinkProtocol->getSystemId(), _mavlinkProtocol->getComponentId(), &msg, _systemId, MAV_COMP_ID_CAMERA, _cameraIdSetting, 0, h, v, 0, 0, "");
+    //int len = mavlink_msg_to_send_buffer(buffer, &msg);
+    //_linkInterface->writeBytesThreadSafe((const char*)buffer, len);
+    // qCDebug(VideoStreamControlLog) << "set stream resolution sent for " << h << "x" << v;
      _checkResolutionTimeout = 0;
 }
 

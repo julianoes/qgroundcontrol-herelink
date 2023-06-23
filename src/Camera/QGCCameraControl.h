@@ -41,7 +41,7 @@ public:
     qreal   aspectRatio     () const;
     qreal   hfov            () const{ return 180; }
     int     type            () const{ return VIDEO_STREAM_TYPE_RTSP; }
-    int     streamID        () const{ return _streamInfo.camera_id; }
+    int     streamID        () const{ return _streamInfo.stream_id; }
     bool    isThermal       () const{ return false; }
 
     bool    update          (const mavlink_video_stream_status_t* vs);

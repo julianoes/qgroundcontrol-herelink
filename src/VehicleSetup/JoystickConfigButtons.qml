@@ -218,9 +218,6 @@ ColumnLayout {
                             fact_shift.value = 0
                         }
                     }
-
-                    Component.onCompleted:  _findCurrentButtonAction()
-                    onModelChanged:         _findCurrentButtonAction()
                 }
                 QGCCheckBox {
                     id:                         repeatCheck

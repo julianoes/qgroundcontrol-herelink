@@ -29,7 +29,7 @@ const char* VideoSettings::videoSourceMPEGTS            = QT_TRANSLATE_NOOP("Vid
 const char* VideoSettings::videoSource3DRSolo           = QT_TRANSLATE_NOOP("VideoSettings", "3DR Solo (requires restart)");
 const char* VideoSettings::videoSourceParrotDiscovery   = QT_TRANSLATE_NOOP("VideoSettings", "Parrot Discovery");
 const char* VideoSettings::videoSourceYuneecMantisG     = QT_TRANSLATE_NOOP("VideoSettings", "Yuneec Mantis G");
-const char* VideoSettings::videoSourceAuto =            = QT_TRANSLATE_NOOP("Auto Connection Video Stream");
+const char* VideoSettings::videoSourceAuto              = QT_TRANSLATE_NOOP("VideoSettings", "Auto Connection Video Stream");
 
 DECLARE_SETTINGGROUP(Video, "Video")
 {

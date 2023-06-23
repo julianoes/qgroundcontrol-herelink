@@ -101,7 +101,6 @@ VideoManager::setToolbox(QGCToolbox *toolbox)
    connect(_videoSettings->rtspUrl(),       &Fact::rawValueChanged, this, &VideoManager::_rtspUrlChanged);
    connect(_videoSettings->tcpUrl(),        &Fact::rawValueChanged, this, &VideoManager::_tcpUrlChanged);
    connect(_videoSettings->aspectRatio(),   &Fact::rawValueChanged, this, &VideoManager::_aspectRatioChanged);
-   connect(_videoSettings->lowLatencyMode(),&Fact::rawValueChanged, this, &VideoManager::_lowLatencyModeChanged);
    MultiVehicleManager *pVehicleMgr = qgcApp()->toolbox()->multiVehicleManager();
    connect(pVehicleMgr, &MultiVehicleManager::activeVehicleChanged, this, &VideoManager::_setActiveVehicle);
 
@@ -526,6 +525,11 @@ VideoManager::_rtspUrlChanged()
     _restartVideo(0);
 }
 
+void VideoManager::_videoStreamUrlChanged(void)
+{
+    _restartVideo(0);
+}
+
 //-----------------------------------------------------------------------------
 void
 VideoManager::_tcpUrlChanged()
@@ -657,7 +661,8 @@ VideoManager::_updateSettings(unsigned id)
     if(!_videoSettings)
         return false;
 
-    const bool lowLatencyStreaming  =_videoSettings->lowLatencyMode()->rawValue().toBool();
+    //const bool lowLatencyStreaming  =_videoSettings->lowLatencyMode()->rawValue().toBool();
+    const bool lowLatencyStreaming  = false;
 
     bool settingsChanged = _lowLatencyStreaming[id] != lowLatencyStreaming;
 
